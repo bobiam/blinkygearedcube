@@ -33,7 +33,7 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { halves, chase, corners, solids, alternate, rainbow };
+SimplePatternList gPatterns = { halves, rainbow, chase, rainbow, corners, rainbow, solids, rainbow, alternate, rainbow };
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
@@ -230,14 +230,19 @@ void alternate()
 void solids()
 {
   fill_solid(leds,NUM_LEDS,CRGB::Red);
+  FastLED.show();
   delay(3000);  
   fill_solid(leds,NUM_LEDS,CRGB::Green);
+  FastLED.show();
   delay(3000);  
   fill_solid(leds,NUM_LEDS,CRGB::Blue);
+  FastLED.show();
   delay(3000);  
   fill_solid(leds,NUM_LEDS,CRGB::White);
+  FastLED.show();
   delay(10000);  
   fill_solid(leds,NUM_LEDS,CRGB::Black);
+  FastLED.show();
   delay(5000);  
 }
 
