@@ -57,7 +57,7 @@ void loop()
 
   // do some periodic updates
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
-  EVERY_N_SECONDS( 10 ) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS( 30 ) { nextPattern(); } // change patterns periodically
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -72,8 +72,8 @@ void chase()
 {
   //use c1 and c2 to hold our background and foreground colors, respectively.
   CRGB c1, c2;
-  //loops is our number of iterations, wait is how long each dot takes.
-  int loops, wait;
+  //wait is how long each dot takes.
+  int wait;
   
   //half the time, let's get some random colors in there.
   if(random(0,2))
@@ -81,24 +81,22 @@ void chase()
     c1.setRGB(random(0,256),random(0,256),random(0,256));
     //invert the random color for a good contrasting color
     c2 = -c1;
-    loops = random(3,20);
     wait = random(50,500);
   }else{
     //hardcoded values to run half the time, because they look good together.
     c1 = CRGB::Red;
     c2 = CRGB::Blue;
-    loops = 5;
     wait = 100;
   }
-  set_all(c1);
-  for(int j=0;j<loops;j++)
+
+  //set all to c1.
+  fill_solid(leds,NUM_LEDS,c1);
+  
+  for(int i=0;i<NUM_LEDS;i++)
   {
-    for(int i=0;i<NUM_LEDS;i++)
-    {
-      leds[i] = c2;
-      FastLED.show();
-      FastLED.delay(wait);
-    }
+    leds[i] = c2;
+    FastLED.show();
+    FastLED.delay(wait);
   }
 }
 
@@ -112,8 +110,8 @@ void corners()
 {
   //use c1 and c2 to hold our background and foreground colors, respectively.
   CRGB c1, c2;
-  //loops is our number of iterations, wait is how long each dot takes.
-  int loops, wait;
+  // wait is how long each swap takes.
+  int  wait;
   
   //half the time, let's get some random colors in there.
   if(random(0,2))
@@ -121,27 +119,24 @@ void corners()
     c1.setRGB(random(0,256),random(0,256),random(0,256));
     //invert the random color for a good contrasting color
     c2 = -c1;
-    loops = random(3,20);
     wait = random(500,1000);
   }else{
     //hardcoded values to run half the time, because they look good together.
     c1 = CRGB::Red;
     c2 = CRGB::Blue;
-    loops = 5;
     wait = 100;
   }
     
   leds[led_center] = c1;
-  for(int j = 0;j<loops;j++)
+
+  for(int i = 0;i<4;i++)
   {
-    for(int i = 0;i<4;i++)
-    {
-      leds[small_corners[i]] = c1;
-      leds[large_corners[i]] = c2;
-    }
-    FastLED.show();
-    FastLED.delay(wait); 
+    leds[small_corners[i]] = c1;
+    leds[large_corners[i]] = c2;
   }
+  FastLED.show();
+  FastLED.delay(wait); 
+
 }
 
 void halves()
@@ -234,42 +229,15 @@ void alternate()
 
 void solids()
 {
-  for(int i=0;i<NUM_LEDS;i++)
-  {
-    leds[i] = CRGB::White;
-  }
-  FastLED.show();
+  fill_solid(leds,NUM_LEDS,CRGB::Red);
+  delay(3000);  
+  fill_solid(leds,NUM_LEDS,CRGB::Green);
+  delay(3000);  
+  fill_solid(leds,NUM_LEDS,CRGB::Blue);
+  delay(3000);  
+  fill_solid(leds,NUM_LEDS,CRGB::White);
   delay(10000);  
-
-  for(int i=0;i<NUM_LEDS;i++)
-  {
-    leds[i] = CRGB::Red;
-  }
-  FastLED.show();
-  delay(3000);  
-
-  for(int i=0;i<NUM_LEDS;i++)
-  {
-    leds[i] = CRGB::Green;
-  }
-  FastLED.show();
-  delay(3000);  
-
-  for(int i=0;i<NUM_LEDS;i++)
-  {
-    leds[i] = CRGB::Blue;
-  }
-  FastLED.show();
-  delay(3000);  
-
-  
+  fill_solid(leds,NUM_LEDS,CRGB::Black);
+  delay(5000);  
 }
 
-void set_all(CRGB color)
-{
-  for(int i=0;i<NUM_LEDS;i++)
-  {
-    leds[i] = color;
-  }
-  FastLED.show();
-}
