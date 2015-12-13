@@ -33,7 +33,7 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { halves, rainbow, chase, rainbow, corners, rainbow, solids, rainbow, alternate, rainbow };
+SimplePatternList gPatterns = { corners_hsvcrossfade, corners_hsvfade, halves, rainbow, chase, rainbow, corners, rainbow, solids, rainbow, alternate, rainbow };
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
@@ -57,7 +57,7 @@ void loop()
 
   // do some periodic updates
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
-  EVERY_N_SECONDS( 30 ) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS( 60 ) { nextPattern(); } // change patterns periodically
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -138,6 +138,72 @@ void corners()
   FastLED.delay(wait); 
 
 }
+
+void corners_hsvfade()
+{
+  //use h1 and h2 to hold our hues  
+  byte h1, h2;
+  int delta, wait;
+  h1 = 160;//blue
+  h2 = 38; //orange
+  
+  wait = 20;
+  delta = 1;
+
+  int loops;
+  loops = 5000;
+
+  for(int j=0;j<loops;j++)
+  {
+    leds[led_center] = CHSV(h1,255,255);
+  
+    for(int i = 0;i<4;i++)
+    {
+      leds[small_corners[i]] = CHSV(h1,255,255);;
+      leds[large_corners[i]] = CHSV(h2,255,255);;
+    }
+
+    h1 = h1+delta;
+    h2 = h2+delta;
+
+    FastLED.show();
+    FastLED.delay(wait); 
+  }
+}
+
+
+void corners_hsvcrossfade()
+{
+  //use h1 and h2 to hold our hues  
+  byte h1, h2;
+  int delta, wait;
+  h1 = 160;//blue
+  h2 = 38; //orange
+  
+  wait = 20;
+  delta = 1;
+
+  int loops;
+  loops = 5000;
+
+  for(int j=0;j<loops;j++)
+  {
+    leds[led_center] = CHSV(h1,255,255);
+  
+    for(int i = 0;i<4;i++)
+    {
+      leds[small_corners[i]] = CHSV(h1,255,255);;
+      leds[large_corners[i]] = CHSV(h2,255,255);;
+    }
+
+    h1 = h1+delta;
+    h2 = h2-delta;
+
+    FastLED.show();
+    FastLED.delay(wait); 
+  }
+}
+
 
 void halves()
 {
@@ -243,6 +309,13 @@ void solids()
   delay(10000);  
   fill_solid(leds,NUM_LEDS,CRGB::Black);
   FastLED.show();
-  delay(5000);  
-}
+  delay(1000);  
+  fill_solid(leds,NUM_LEDS,CRGB::White);
+  FastLED.show();
+  delay(10000);  
+  fill_solid(leds,NUM_LEDS,CRGB::Black);
+  FastLED.show();
+  delay(1000);  
+}  
+
 
