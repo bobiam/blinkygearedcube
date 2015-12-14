@@ -33,7 +33,7 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { corners_hsvcrossfade, corners_hsvfade, halves, rainbow, chase, rainbow, corners, rainbow, solids, rainbow, alternate, rainbow };
+SimplePatternList gPatterns = { randy, corners_hsvcrossfade, halves, corners_hsvfade, rainbow, chase, rainbow, corners, rainbow, solids, rainbow, alternate, rainbow };
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
@@ -57,7 +57,7 @@ void loop()
 
   // do some periodic updates
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
-  EVERY_N_SECONDS( 60 ) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS( 30 ) { nextPattern(); } // change patterns periodically
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -66,6 +66,14 @@ void nextPattern()
 {
   // add one to the current pattern number, and wrap around at the end
   gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
+}
+
+void randy()
+{
+  CRGB r;
+  leds[random(0,NUM_LEDS)] = r.setRGB(random(0,256),random(0,256),random(0,256));
+  FastLED.show();
+  FastLED.delay(random(0,255));
 }
 
 void chase()
@@ -147,7 +155,7 @@ void corners_hsvfade()
   h1 = 160;//blue
   h2 = 38; //orange
   
-  wait = 20;
+  wait = 10;
   delta = 1;
 
   int loops;
@@ -177,10 +185,11 @@ void corners_hsvcrossfade()
   //use h1 and h2 to hold our hues  
   byte h1, h2;
   int delta, wait;
+  bool partyFlag = false;
   h1 = 160;//blue
   h2 = 38; //orange
   
-  wait = 20;
+  wait = 30;
   delta = 1;
 
   int loops;
@@ -192,12 +201,69 @@ void corners_hsvcrossfade()
   
     for(int i = 0;i<4;i++)
     {
-      leds[small_corners[i]] = CHSV(h1,255,255);;
-      leds[large_corners[i]] = CHSV(h2,255,255);;
+      leds[small_corners[i]] = CHSV(h1,255,255);
+      leds[large_corners[i]] = CHSV(h2,255,255);
     }
 
     h1 = h1+delta;
     h2 = h2-delta;
+
+    if(h1 == h2)
+    {
+      //collision!  This is what we've been trying to hit.  Play!
+      partyFlag = !partyFlag;
+      if(partyFlag)
+      {
+        for(int k=255;k>-1;k=k-3)
+        {
+          leds[led_center] = CHSV(h1,k,255);
+        
+          for(int i = 0;i<4;i++)
+          {
+            leds[small_corners[i]] = CHSV(h1,k,255);
+            leds[large_corners[i]] = CHSV(h2,k,255);
+          }    
+          FastLED.show();
+        }
+        for(int k=0;k<256;k=k+3)
+        {
+  
+          leds[led_center] = CHSV(h1,k,255);
+        
+          for(int i = 0;i<4;i++)
+          {
+            leds[small_corners[i]] = CHSV(h1,k,255);
+            leds[large_corners[i]] = CHSV(h2,k,255);
+          }    
+          FastLED.show();
+        }      
+      }else{
+        for(int k=255;k>-1;k=k-3)
+        {
+  
+          leds[led_center] = CHSV(h1,255,k);
+        
+          for(int i = 0;i<4;i++)
+          {
+            leds[small_corners[i]] = CHSV(h1,255,k);
+            leds[large_corners[i]] = CHSV(h2,255,k);
+          }    
+          FastLED.show();
+        }
+        for(int k=0;k<256;k=k+3)
+        {
+  
+          leds[led_center] = CHSV(h1,255,k);
+        
+          for(int i = 0;i<4;i++)
+          {
+            leds[small_corners[i]] = CHSV(h1,255,k);
+            leds[large_corners[i]] = CHSV(h2,255,k);
+          }    
+          FastLED.show();
+        }          
+      }
+    }
 
     FastLED.show();
     FastLED.delay(wait); 
