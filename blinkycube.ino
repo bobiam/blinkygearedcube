@@ -33,7 +33,7 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { randy, corners_hsvcrossfade, halves, corners_hsvfade, rainbow, chase, rainbow, corners, rainbow, solids, rainbow, alternate, rainbow };
+SimplePatternList gPatterns = {  inside_outside, ins_out_fadedown, center_rainbow, earth_rand, water_rand, fire_rand, bw_rand, air_rand, corners_hsvcrossfade, halves, rainbow, chase, randy, corners, corners_hsvfade, solids, alternate, rainbow };
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
@@ -57,7 +57,7 @@ void loop()
 
   // do some periodic updates
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
-  EVERY_N_SECONDS( 30 ) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS( 42 ) { nextPattern(); } // change patterns periodically
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -112,6 +112,59 @@ void rainbow()
 {
   // FastLED's built-in rainbow generator
   fill_rainbow( leds, NUM_LEDS, gHue, 7);
+}
+
+void center_rainbow()
+{
+  fill_rainbow( leds, 1, gHue, 7 );
+}
+
+void inside_outside()
+{
+  //use c1 and c2 to hold our background and foreground colors, respectively.
+  CRGB c1, c2;
+  
+  c1 = CRGB::Red;
+  c2 = CRGB::Blue;
+    
+  leds[led_center] = c1;
+
+  for(int i = 0;i<4;i++)
+  {
+    leds[small_corners[i]] = c2;
+    leds[large_corners[i]] = c2;
+  }
+  FastLED.show();
+}
+
+void ins_out_fadedown()
+{
+  CRGB c1,c2;
+  leds[led_center] = c1;
+
+  for(int i = 0;i<4;i++)
+  {
+    leds[small_corners[i]] = c2;
+    leds[large_corners[i]] = c2;
+  }
+  FastLED.show();  
+
+  for(int j=0;j<255;j++)
+  {
+    c1 = CHSV(j,255,255);
+    c2 = CHSV(256-j,255,255);
+
+    leds[led_center] = c1;
+  
+    for(int i = 0;i<4;i++)
+    {
+      leds[small_corners[i]] = c2;
+      leds[large_corners[i]] = c2;
+    }
+    FastLED.show();
+    FastLED.delay(100);
+  }
+  
 }
 
 void corners()
@@ -185,7 +238,6 @@ void corners_hsvcrossfade()
   //use h1 and h2 to hold our hues  
   byte h1, h2;
   int delta, wait;
-  bool partyFlag = false;
   h1 = 160;//blue
   h2 = 38; //orange
   
@@ -208,68 +260,10 @@ void corners_hsvcrossfade()
     h1 = h1+delta;
     h2 = h2-delta;
 
-    if(h1 == h2)
-    {
-      //collision!  This is what we've been trying to hit.  Play!
-      partyFlag = !partyFlag;
-      if(partyFlag)
-      {
-        for(int k=255;k>-1;k=k-3)
-        {
-          leds[led_center] = CHSV(h1,k,255);
-        
-          for(int i = 0;i<4;i++)
-          {
-            leds[small_corners[i]] = CHSV(h1,k,255);
-            leds[large_corners[i]] = CHSV(h2,k,255);
-          }    
-          FastLED.show();
-        }
-        for(int k=0;k<256;k=k+3)
-        {
-  
-          leds[led_center] = CHSV(h1,k,255);
-        
-          for(int i = 0;i<4;i++)
-          {
-            leds[small_corners[i]] = CHSV(h1,k,255);
-            leds[large_corners[i]] = CHSV(h2,k,255);
-          }    
-          FastLED.show();
-        }      
-      }else{
-        for(int k=255;k>-1;k=k-3)
-        {
-  
-          leds[led_center] = CHSV(h1,255,k);
-        
-          for(int i = 0;i<4;i++)
-          {
-            leds[small_corners[i]] = CHSV(h1,255,k);
-            leds[large_corners[i]] = CHSV(h2,255,k);
-          }    
-          FastLED.show();
-        }
-        for(int k=0;k<256;k=k+3)
-        {
-  
-          leds[led_center] = CHSV(h1,255,k);
-        
-          for(int i = 0;i<4;i++)
-          {
-            leds[small_corners[i]] = CHSV(h1,255,k);
-            leds[large_corners[i]] = CHSV(h2,255,k);
-          }    
-          FastLED.show();
-        }          
-      }
-    }
-
     FastLED.show();
     FastLED.delay(wait); 
   }
 }
-
 
 void halves()
 {
@@ -321,6 +315,46 @@ void halves()
   FastLED.show();
   FastLED.delay(1000);   
     
+}
+
+void fire_rand()
+{
+  CRGB colors[] = {CRGB::Tomato, CRGB::Red, CRGB::OrangeRed, CRGB::Brown, CRGB::FireBrick, CRGB::Maroon};
+  palette_rand(colors, 6, 150);
+}
+
+void water_rand()
+{
+  CRGB colors[] = {CRGB::Blue, CRGB::DarkBlue, CRGB::DarkTurquoise, CRGB::Aqua, CRGB::SeaGreen, CRGB::Aquamarine};
+  palette_rand(colors, 6, 150);
+}
+
+void earth_rand()
+{
+  CRGB colors[] = {CRGB::Chartreuse, CRGB::Green, CRGB::DarkOliveGreen, CRGB::DarkGreen, CRGB::LimeGreen, CRGB::ForestGreen};
+  palette_rand(colors, 6, 150);
+}
+
+void air_rand()
+{
+  CRGB colors[] = {CRGB::Azure, CRGB::Cyan, CRGB::DeepSkyBlue, CRGB::LightSkyBlue, CRGB::DodgerBlue, CRGB::Turquoise};
+  palette_rand(colors, 6, 150);
+}
+
+void bw_rand()
+{
+  CRGB colors[] = {CRGB::Black, CRGB::White};
+  palette_rand(colors, 2, 150);
+}
+
+void palette_rand(CRGB colors[], int colorCount,int wait)
+{
+  for(int i =0; i < NUM_LEDS; i++)
+  {
+    leds[i] = colors[random(0,colorCount)];
+  }
+  FastLED.show();
+  FastLED.delay(wait);    
 }
 
 void alternate()
