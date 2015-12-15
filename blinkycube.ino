@@ -33,7 +33,7 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = {  inside_outside, ins_out_fadedown, center_rainbow, earth_rand, water_rand, fire_rand, bw_rand, air_rand, corners_hsvcrossfade, halves, rainbow, chase, randy, corners, corners_hsvfade, solids, alternate, rainbow };
+SimplePatternList gPatterns = { red_rand, green_rand, blue_rand, earth_rand, water_rand, fire_rand, bw_rand, air_rand, inside_outside, ins_out_fadedown, center_rainbow, corners_hsvcrossfade, halves, rainbow, chase, randy, corners, corners_hsvfade, solids, alternate };
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
@@ -57,7 +57,7 @@ void loop()
 
   // do some periodic updates
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
-  EVERY_N_SECONDS( 42 ) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS( 60 ) { nextPattern(); } // change patterns periodically
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
@@ -151,7 +151,7 @@ void ins_out_fadedown()
 
   for(int j=0;j<255;j++)
   {
-    c1 = CHSV(j,255,255);
+    c1 = CHSV(j,255,j);
     c2 = CHSV(256-j,255,255);
 
     leds[led_center] = c1;
@@ -317,44 +317,72 @@ void halves()
     
 }
 
+void green_rand()
+{
+  CRGB colors[24];
+  for(int i=0;i<23;i++)
+  {
+    colors[i].setRGB(0,i*8,0); 
+  }
+  palette_rand(colors, 24, 200);
+}
+
+void red_rand()
+{
+  CRGB colors[24];
+  for(int i=0;i<23;i++)
+  {
+    colors[i].setRGB(i*8,0,0); 
+  }
+  palette_rand(colors, 24, 200);
+}
+
+void blue_rand()
+{
+  CRGB colors[24];
+  for(int i=0;i<23;i++)
+  {
+    colors[i].setRGB(0,0,i*8); 
+  }
+  palette_rand(colors, 24, 200);
+}
+
 void fire_rand()
 {
   CRGB colors[] = {CRGB::Tomato, CRGB::Red, CRGB::OrangeRed, CRGB::Brown, CRGB::FireBrick, CRGB::Maroon};
-  palette_rand(colors, 6, 150);
+  palette_rand(colors, 6, 200);
 }
 
 void water_rand()
 {
   CRGB colors[] = {CRGB::Blue, CRGB::DarkBlue, CRGB::DarkTurquoise, CRGB::Aqua, CRGB::SeaGreen, CRGB::Aquamarine};
-  palette_rand(colors, 6, 150);
+  palette_rand(colors, 6, 200);
 }
 
 void earth_rand()
 {
   CRGB colors[] = {CRGB::Chartreuse, CRGB::Green, CRGB::DarkOliveGreen, CRGB::DarkGreen, CRGB::LimeGreen, CRGB::ForestGreen};
-  palette_rand(colors, 6, 150);
+  palette_rand(colors, 6, 200);
 }
 
 void air_rand()
 {
   CRGB colors[] = {CRGB::Azure, CRGB::Cyan, CRGB::DeepSkyBlue, CRGB::LightSkyBlue, CRGB::DodgerBlue, CRGB::Turquoise};
-  palette_rand(colors, 6, 150);
+  palette_rand(colors, 6, 200);
 }
 
 void bw_rand()
 {
   CRGB colors[] = {CRGB::Black, CRGB::White};
-  palette_rand(colors, 2, 150);
+  palette_rand(colors, 2, 200);
 }
 
 void palette_rand(CRGB colors[], int colorCount,int wait)
 {
-  for(int i =0; i < NUM_LEDS; i++)
-  {
-    leds[i] = colors[random(0,colorCount)];
-  }
-  FastLED.show();
-  FastLED.delay(wait);    
+    leds[random(0,NUM_LEDS)] = colors[random(0,colorCount)];
+    FastLED.show();
+    FastLED.delay(wait); 
+
 }
 
 void alternate()
