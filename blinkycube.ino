@@ -26,6 +26,8 @@ void setup() {
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
 
+  attachInterrupt(digitalPinToInterrupt(3), nextPattern, RISING);  
+
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
 }
@@ -33,9 +35,9 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = { red_rand, green_rand, blue_rand, earth_rand, water_rand, fire_rand, bw_rand, air_rand, inside_outside, ins_out_fadedown, center_rainbow, corners_hsvcrossfade, halves, rainbow, chase, randy, corners, corners_hsvfade, solids, alternate };
+SimplePatternList gPatterns = {  corners_hsvcrossfade, halves, rainbow, chase, randy, corners, corners_hsvfade, solids, alternate, rainbow, green_rand, blue_rand, earth_rand, water_rand, fire_rand, bw_rand, air_rand, inside_outside, ins_out_fadedown, center_rainbow };
 
-uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
+volatile uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 int led_center = 0;
 int small_corners[] = {1,5,6,7};
@@ -44,6 +46,13 @@ int left_side[] = {1,2,3,7};
 int right_side[] = {4,5,6,8};
 int top[] = {1,3,4,6};
 int bottom[] = {2,5,7,8};
+//use c1 and c2 to hold our background and foreground colors, respectively.
+CRGB c1, c2;
+
+//use h1 and h2 to hold our hues  
+int delta, wait;
+byte h1 = 160;//blue
+byte h2 = 38; //orange  
   
 void loop()
 {
@@ -57,15 +66,23 @@ void loop()
 
   // do some periodic updates
   EVERY_N_MILLISECONDS( 20 ) { gHue++; } // slowly cycle the "base color" through the rainbow
-  EVERY_N_SECONDS( 60 ) { nextPattern(); } // change patterns periodically
+  EVERY_N_SECONDS( 180 ) { nextPattern(); } // change patterns periodically
 }
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 void nextPattern()
 {
-  // add one to the current pattern number, and wrap around at the end
-  gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
+ static unsigned long last_interrupt_time = 0;
+ unsigned long interrupt_time = millis();
+ // If interrupts come faster than 500ms, assume it's a bounce and ignore
+ if (interrupt_time - last_interrupt_time > 500) 
+ {
+   fill_solid(leds,NUM_LEDS,CRGB::Black);
+   // add one to the current pattern number, and wrap around at the end
+   gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
+ }
+ last_interrupt_time = interrupt_time;  
 }
 
 void randy()
@@ -78,8 +95,6 @@ void randy()
 
 void chase()
 {
-  //use c1 and c2 to hold our background and foreground colors, respectively.
-  CRGB c1, c2;
   //wait is how long each dot takes.
   int wait;
   
@@ -121,8 +136,6 @@ void center_rainbow()
 
 void inside_outside()
 {
-  //use c1 and c2 to hold our background and foreground colors, respectively.
-  CRGB c1, c2;
   
   c1 = CRGB::Red;
   c2 = CRGB::Blue;
@@ -139,7 +152,6 @@ void inside_outside()
 
 void ins_out_fadedown()
 {
-  CRGB c1,c2;
   leds[led_center] = c1;
 
   for(int i = 0;i<4;i++)
@@ -149,28 +161,22 @@ void ins_out_fadedown()
   }
   FastLED.show();  
 
-  for(int j=0;j<255;j++)
-  {
-    c1 = CHSV(j,255,j);
-    c2 = CHSV(256-j,255,255);
 
-    leds[led_center] = c1;
-  
-    for(int i = 0;i<4;i++)
-    {
-      leds[small_corners[i]] = c2;
-      leds[large_corners[i]] = c2;
-    }
-    FastLED.show();
-    FastLED.delay(100);
+  c1 = CHSV(gHue,255,gHue);
+  c2 = CHSV(256-gHue,255,255);
+
+  leds[led_center] = c1;
+
+  for(int i = 0;i<4;i++)
+  {
+    leds[small_corners[i]] = c2;
+    leds[large_corners[i]] = c2;
   }
-  
+  FastLED.show();  
 }
 
 void corners()
 {
-  //use c1 and c2 to hold our background and foreground colors, respectively.
-  CRGB c1, c2;
   // wait is how long each swap takes.
   int  wait;
   
@@ -202,73 +208,31 @@ void corners()
 
 void corners_hsvfade()
 {
-  //use h1 and h2 to hold our hues  
-  byte h1, h2;
-  int delta, wait;
-  h1 = 160;//blue
-  h2 = 38; //orange
-  
-  wait = 10;
-  delta = 1;
+  leds[led_center] = CHSV(gHue,255,255);
 
-  int loops;
-  loops = 5000;
-
-  for(int j=0;j<loops;j++)
+  for(int i = 0;i<4;i++)
   {
-    leds[led_center] = CHSV(h1,255,255);
-  
-    for(int i = 0;i<4;i++)
-    {
-      leds[small_corners[i]] = CHSV(h1,255,255);;
-      leds[large_corners[i]] = CHSV(h2,255,255);;
-    }
-
-    h1 = h1+delta;
-    h2 = h2+delta;
-
-    FastLED.show();
-    FastLED.delay(wait); 
+    leds[small_corners[i]] = CHSV(gHue+128,255,255);;
+    leds[large_corners[i]] = CHSV(gHue,255,255);;
   }
+  FastLED.show();
 }
 
 
 void corners_hsvcrossfade()
 {
-  //use h1 and h2 to hold our hues  
-  byte h1, h2;
-  int delta, wait;
-  h1 = 160;//blue
-  h2 = 38; //orange
-  
-  wait = 30;
-  delta = 1;
-
-  int loops;
-  loops = 5000;
-
-  for(int j=0;j<loops;j++)
-  {
     leds[led_center] = CHSV(h1,255,255);
   
     for(int i = 0;i<4;i++)
     {
-      leds[small_corners[i]] = CHSV(h1,255,255);
-      leds[large_corners[i]] = CHSV(h2,255,255);
+      leds[small_corners[i]] = CHSV(gHue,255,255);
+      leds[large_corners[i]] = CHSV(gHue+128,255,255);
     }
-
-    h1 = h1+delta;
-    h2 = h2-delta;
-
-    FastLED.show();
-    FastLED.delay(wait); 
-  }
+    FastLED.show();    
 }
 
 void halves()
 {
-  //use c1 and c2 to hold our background and foreground colors, respectively.
-  CRGB c1, c2;
   
   //half the time, let's get some random colors in there.
   if(random(0,2))
@@ -382,7 +346,6 @@ void palette_rand(CRGB colors[], int colorCount,int wait)
     leds[random(0,NUM_LEDS)] = colors[random(0,colorCount)];
     FastLED.show();
     FastLED.delay(wait); 
-
 }
 
 void alternate()
@@ -401,7 +364,7 @@ void alternate()
     c1 = CRGB::Red;
     c2 = CRGB::Blue;
   }
-  for(int j = 0;j<20;j++)
+  for(int j = 0;j<5;j++)
   {
     leds[led_center] = CRGB::Black;
     for(int i = 0;i<4;i++)
